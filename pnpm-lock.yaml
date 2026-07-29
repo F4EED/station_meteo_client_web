@@ -62,7 +62,7 @@ importers:
     dependencies:
       '@hookform/resolvers':
         specifier: ^5.4.2
-        version: 5.4.2(@standard-schema/spec@1.1.0)(ajv@8.20.0)(react-hook-form@7.82.0(react@19.2.8))(zod@4.4.3)
+        version: 5.4.2(@standard-schema/spec@1.1.0)(ajv@8.20.0)(react-hook-form@7.83.0(react@19.2.8))(zod@4.4.3)
       '@meshtastic/sdk':
         specifier: workspace:*
         version: link:../../packages/sdk
@@ -217,8 +217,8 @@ importers:
         specifier: ^6.1.2
         version: 6.1.2(react@19.2.8)
       react-hook-form:
-        specifier: ^7.82.0
-        version: 7.82.0(react@19.2.8)
+        specifier: ^7.83.0
+        version: 7.83.0(react@19.2.8)
       react-i18next:
         specifier: ^17.0.11
         version: 17.0.11(i18next@26.3.6(typescript@7.0.2))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@7.0.2)
@@ -3999,8 +3999,8 @@ packages:
     engines: {node: '>=6.0.0'}
     hasBin: true
 
-  baseline-browser-mapping@2.11.3:
-    resolution: {integrity: sha512-sbT0Ui/CZwyAyy7icT1Gw5P1LKRlFaHwaF6tDCW5YHq2X5SeeZFphBuIagopSfwSSZq3sQcbmEL072yphxm7ew==}
+  baseline-browser-mapping@2.11.4:
+    resolution: {integrity: sha512-s4+sLr9mZ/CyqeRritFeYV/Zx73OAtmaHn6kkBS1XRoJn1hrg3xIDUcpicAEX68tkcIN0iBCgti31C8zxtkhsQ==}
     engines: {node: '>=6.0.0'}
     hasBin: true
 
@@ -5525,8 +5525,8 @@ packages:
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
 
-  react-hook-form@7.82.0:
-    resolution: {integrity: sha512-Zw/uFZ2dO+02GHlBn7JFGn8kZJ7LdM33B/0BXOovzFay+CMhf94JMw5BVu+F1tVkUKjNvBuaE3fz5BJhga10Tg==}
+  react-hook-form@7.83.0:
+    resolution: {integrity: sha512-AXt8cMCmx5a7u4uvpb2uRFVrWQhllI4pV+LSykxIac/hjt44TnQkmX9BKuQi2i+LDC62esmiLpilkav+kjVf/A==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       react: ^16.8.0 || ^17 || ^18 || ^19
@@ -7544,10 +7544,10 @@ snapshots:
     dependencies:
       base64-js: 1.5.1
 
-  '@hookform/resolvers@5.4.2(@standard-schema/spec@1.1.0)(ajv@8.20.0)(react-hook-form@7.82.0(react@19.2.8))(zod@4.4.3)':
+  '@hookform/resolvers@5.4.2(@standard-schema/spec@1.1.0)(ajv@8.20.0)(react-hook-form@7.83.0(react@19.2.8))(zod@4.4.3)':
     dependencies:
       '@standard-schema/utils': 0.3.0
-      react-hook-form: 7.82.0(react@19.2.8)
+      react-hook-form: 7.83.0(react@19.2.8)
     optionalDependencies:
       '@standard-schema/spec': 1.1.0
       ajv: 8.20.0
@@ -10627,7 +10627,7 @@ snapshots:
 
   baseline-browser-mapping@2.10.44: {}
 
-  baseline-browser-mapping@2.11.3: {}
+  baseline-browser-mapping@2.11.4: {}
 
   better-result@2.10.0: {}
 
@@ -10667,7 +10667,7 @@ snapshots:
 
   browserslist@4.28.7:
     dependencies:
-      baseline-browser-mapping: 2.11.3
+      baseline-browser-mapping: 2.11.4
       caniuse-lite: 1.0.30001806
       electron-to-chromium: 1.5.396
       node-releases: 2.0.51
@@ -12087,7 +12087,7 @@ snapshots:
     dependencies:
       react: 19.2.8
 
-  react-hook-form@7.82.0(react@19.2.8):
+  react-hook-form@7.83.0(react@19.2.8):
     dependencies:
       react: 19.2.8
 
