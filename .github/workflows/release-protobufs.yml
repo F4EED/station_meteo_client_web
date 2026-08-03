@@ -69,7 +69,7 @@ jobs:
           github_token: ${{ github.token }}
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@v6.0.9
 
       - name: Install workspace dependencies
         run: pnpm install --frozen-lockfile
