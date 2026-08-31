@@ -57,4 +57,35 @@ describe("NodesClient", () => {
     expect(client.nodes.byNum(100)?.deviceMetrics?.batteryLevel).toBe(80);
     expect(client.nodes.byNum(100)?.deviceMetrics?.voltage).toBeCloseTo(4.1);
   });
+
+  it("seeds a stub node from MyInfo so the local node exists without a NodeInfo packet", () => {
+    const { transport } = createFakeTransport();
+    const client = new MeshClient({ transport });
+
+    client.events.onMyNodeInfo.dispatch(
+      create(Protobuf.Mesh.MyNodeInfoSchema, { myNodeNum: 0xabc }),
+    );
+
+    expect(client.nodes.byNum(0xabc)?.num).toBe(0xabc);
+    expect(client.nodes.byNum(0xabc)?.isFavorite).toBe(true);
+  });
+
+  it("does not overwrite an existing node when MyInfo arrives later", () => {
+    const { transport } = createFakeTransport();
+    const client = new MeshClient({ transport });
+
+    client.events.onNodeInfoPacket.dispatch(
+      create(Protobuf.Mesh.NodeInfoSchema, {
+        num: 7,
+        isFavorite: false,
+        user: create(Protobuf.Mesh.UserSchema, { longName: "Station" }),
+      }),
+    );
+    client.events.onMyNodeInfo.dispatch(
+      create(Protobuf.Mesh.MyNodeInfoSchema, { myNodeNum: 7 }),
+    );
+
+    expect(client.nodes.byNum(7)?.user?.longName).toBe("Station");
+    expect(client.nodes.byNum(7)?.isFavorite).toBe(false);
+  });
 });

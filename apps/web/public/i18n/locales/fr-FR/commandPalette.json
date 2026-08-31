@@ -12,6 +12,7 @@
   "goto": {
     "label": "Aller à",
     "command": {
+      "meteo": "Météo",
       "messages": "Messages",
       "map": "Carte",
       "config": "Config",

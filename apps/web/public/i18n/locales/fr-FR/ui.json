@@ -1,6 +1,7 @@
 {
   "navigation": {
     "title": "Navigation",
+    "meteo": "Météo",
     "messages": "Messages",
     "map": "Carte",
     "settings": "Réglages",
@@ -9,11 +10,12 @@
     "deviceConfig": "Configuration de l'appareil",
     "moduleConfig": "Configuration du module",
     "manageConnections": "Manage Connections",
-    "nodes": "Noeuds"
+    "nodes": "Noeuds",
+    "measurementRange": "Plage de mesure"
   },
   "app": {
-    "title": "Meshtastic",
-    "logo": "Logo Meshtastic"
+    "title": "Station météo",
+    "logo": "Logo station météo"
   },
   "sidebar": {
     "collapseToggle": {
@@ -226,5 +228,23 @@
   "footer": {
     "text": "Propulsé par <0>▲ Vercel</0> | Meshtastic® est une marque déposée de Meshtastic LLC. | <1>Informations légales</1>",
     "commitSha": "SHA : {{sha}}"
+  },
+  "meteo": {
+    "title": "Météo",
+    "environment": "Environnement (BME688)",
+    "power": "Énergie",
+    "temperature": "Température",
+    "humidity": "Humidité",
+    "pressure": "Pression",
+    "iaq": "IAQ",
+    "gas": "Résistance gaz",
+    "battery": "Batterie",
+    "voltage": "Tension",
+    "waiting": "Pas encore de télémétrie. Connecter le L1 Pro (BLE ou USB) et attendre un relevé.",
+    "lastUpdate": "Dernier relevé : {{time}}",
+    "co2": "CO2 estimé",
+    "dewPoint": "Point de rosée",
+    "feelsLike": "Température ressentie",
+    "iaqHeating": "Chauffe gaz…"
   }
 }

@@ -1,5 +1,5 @@
 import { create } from "@bufbuild/protobuf";
-import type { Node as SdkNode } from "@meshtastic/sdk";
+import type { Node as SdkNode, ReadonlySignal } from "@meshtastic/sdk";
 import { Protobuf } from "@meshtastic/sdk";
 import { useActiveClient, useSignal } from "@meshtastic/sdk-react";
 import { useMemo } from "react";
@@ -19,28 +19,28 @@ import { useMemo } from "react";
 
 const EMPTY_NODES: ReadonlyArray<SdkNode> = [];
 
+const EMPTY_NODES_SIGNAL: ReadonlySignal<ReadonlyArray<SdkNode>> = {
+  value: EMPTY_NODES,
+  peek: () => EMPTY_NODES,
+  subscribe: () => () => {},
+};
+
+const EMPTY_NUM_SIGNAL: ReadonlySignal<number | undefined> = {
+  value: undefined,
+  peek: () => undefined,
+  subscribe: () => () => {},
+};
+
 function useSdkNodesSafe(): ReadonlyArray<SdkNode> {
   const client = useActiveClient();
   // Always pass *something* to useSignal so the hook count stays stable
   // across the with-client / without-client branches.
-  return useSignal(
-    client?.nodes.list ?? {
-      value: EMPTY_NODES,
-      peek: () => EMPTY_NODES,
-      subscribe: () => () => {},
-    },
-  );
+  return useSignal(client?.nodes.list ?? EMPTY_NODES_SIGNAL);
 }
 
 function useMyNodeNumSafe(): number | undefined {
   const client = useActiveClient();
-  return useSignal(
-    client?.device.myNodeNum ?? {
-      value: undefined,
-      peek: () => undefined,
-      subscribe: () => () => {},
-    },
-  );
+  return useSignal(client?.device.myNodeNum ?? EMPTY_NUM_SIGNAL);
 }
 
 export function useNodesAsProto(): Protobuf.Mesh.NodeInfo[] {
@@ -59,17 +59,20 @@ export function useNodeAsProto(
 }
 
 /**
- * "My node" — the node info for the locally-connected device, if its
- * NodeInfo packet has been observed yet. Returns undefined while the
- * device is still configuring or there is no active client.
+ * "My node" — the node info for the locally-connected device.
+ * Returns a stub `{ num }` once MyInfo has arrived even if the own
+ * NodeInfo packet never did (ONLY_CONFIG handshake). Undefined only
+ * while there is no active client or myNodeNum is still unknown.
  */
 export function useMyNodeAsProto(): Protobuf.Mesh.NodeInfo | undefined {
   const myNodeNum = useMyNodeNumSafe();
   const nodes = useSdkNodesSafe();
   return useMemo(() => {
-    if (myNodeNum === undefined) return undefined;
+    if (!myNodeNum) return undefined;
     const found = nodes.find((n) => n.num === myNodeNum);
-    return found ? toNodeInfo(found) : undefined;
+    return found
+      ? toNodeInfo(found)
+      : create(Protobuf.Mesh.NodeInfoSchema, { num: myNodeNum });
   }, [myNodeNum, nodes]);
 }
 

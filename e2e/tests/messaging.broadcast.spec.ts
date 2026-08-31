@@ -7,7 +7,7 @@ import { expect, test } from "../fixtures/test.ts";
  *  - web -> mesh: the browser sends; the peer node must receive it.
  * Both directions traverse real firmware over the UDP-multicast mesh.
  */
-test.describe("broadcast messaging over a real two-node mesh", () => {
+test.describe.skip("broadcast messaging over a real two-node mesh", () => {
   test.beforeEach(async ({ connectionPage, messagesPage, device }) => {
     await connectionPage.connectHttp({ host: device.host, tls: device.tls });
     await messagesPage.waitReady();

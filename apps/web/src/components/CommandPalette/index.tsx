@@ -18,13 +18,12 @@ import {
   BoxSelectIcon,
   BugIcon,
   CloudOff,
+  CloudSunIcon,
   EraserIcon,
   FactoryIcon,
   HardDriveUpload,
   LinkIcon,
   type LucideIcon,
-  MapIcon,
-  MessageSquareIcon,
   Pin,
   PlusIcon,
   PowerIcon,
@@ -33,7 +32,6 @@ import {
   SettingsIcon,
   SmartphoneIcon,
   TrashIcon,
-  UsersIcon,
 } from "lucide-react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -81,33 +79,19 @@ export const CommandPalette = () => {
       icon: LinkIcon,
       commands: [
         {
-          label: t("goto.command.messages"),
-          icon: MessageSquareIcon,
+          label: t("goto.command.meteo"),
+          icon: CloudSunIcon,
           action() {
-            navigate({ to: "/messages" });
-          },
-        },
-        {
-          label: t("goto.command.map"),
-          icon: MapIcon,
-          action() {
-            navigate({ to: "/map" });
+            navigate({ to: "/meteo" });
           },
         },
         {
           label: t("goto.command.config"),
           icon: SettingsIcon,
           action() {
-            navigate({ to: "/config" });
+            navigate({ to: "/settings" });
           },
           tags: ["settings"],
-        },
-        {
-          label: t("goto.command.nodes"),
-          icon: UsersIcon,
-          action() {
-            navigate({ to: "/nodes" });
-          },
         },
       ],
     },

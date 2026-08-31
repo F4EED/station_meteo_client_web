@@ -29,9 +29,14 @@
     "description": "Are you sure you want to regenerate the pre-shared key?",
     "regenerate": "Regenerate"
   },
-  "addConnection": {
+    "addConnection": {
     "title": "Add connection",
-    "description": "Choose a connection type and fill in the details",
+    "description": "USB (Web Serial), Bluetooth (Web Bluetooth) or IP.",
+    "tabs": {
+      "usb": "USB",
+      "bluetooth": "Bluetooth",
+      "ip": "IP"
+    },
     "validation": {
       "requiresWebBluetooth": "This connection type requires <0>Web Bluetooth</0>. Please use a supported browser, like Chrome or Edge.",
       "requiresWebSerial": "This connection type requires <0>Web Serial</0>. Please use a supported browser, like Chrome or Edge.",

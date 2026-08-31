@@ -1,3 +1,27 @@
+# Station météo — client web
+
+Fork du client web Meshtastic pour la **mini station météo** (Seeed Wio Tracker L1 Pro sans écran, BME688 **extérieur sous abri**). Version station : **0.1.1**.
+
+Rôle de ce dépôt : configurer et lire le nœud **headless**. Connexions : **USB** (Web Serial, handshake config seule — pas de dump NodeDB ni manifeste fichiers), **Bluetooth** (Web Bluetooth), **IP** (HTTP). Pas d’écran onboard. Pas de messagerie, liste de nœuds ni carte — uniquement **télémétrie** et **réglages**.
+
+Page Météo : T, HR, pression, point de rosée, ressenti, **gaz (Ω)**, **IAQ**, **eCO2** (`400 + IAQ × 4` ppm, pas NDIR). Fil `gas_resistance` = kΩ, affichage ×1000. Si `iaq` manque : estimation depuis le gaz (plafond 100 kΩ) ; sans gaz : « Chauffe gaz… ». Heure du nœud : PC à la connexion, GPS si fix.
+
+Le **projet global** (matériel, firmware, Gaulix, seuils, gaz sous abri 50–150 kΩ) : [`../README.md`](../README.md) — dépôt [F4EED/station_meteo_mini](https://github.com/F4EED/station_meteo_mini). Firmware : [`../firmware/`](../firmware/). Android : [`../station_meteo_client_android/`](../station_meteo_client_android/).
+
+## Lancer (mini station)
+
+Installation (Chrome/Chromium, raccourci Bureau) : [`../install.sh`](../install.sh) (Linux) ou [`../install.ps1`](../install.ps1) (Windows). Détail : [`../README.md`](../README.md) § Client web.
+
+Depuis la racine `Station-météo/` (ou l’icône Bureau) :
+
+```bash
+../start_StMet.sh
+```
+
+Vite sur http://127.0.0.1:5173/ (ou http://localhost:5173/) + Chrome / Chromium via l’icône Bureau (flags Web Bluetooth / Web Serial). `STMET_NO_BROWSER=1` pour le serveur seul.
+
+---
+
 # Meshtastic Web Monorepo
 
 [![CI](https://img.shields.io/github/actions/workflow/status/meshtastic/web/ci.yml?branch=main&label=Web%20CI&logo=github&color=yellow)](https://github.com/meshtastic/web/actions/workflows/ci.yml)

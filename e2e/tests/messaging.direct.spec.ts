@@ -22,7 +22,7 @@ import { expect, test } from "../fixtures/test.ts";
  * already covers bidirectional messaging; re-enable against real hardware, where
  * real LoRa carries PKC fine.
  */
-test.describe("direct messaging over a real two-node mesh", () => {
+test.describe.skip("direct messaging over a real two-node mesh", () => {
   test.beforeEach(async ({ connectionPage, messagesPage, device }) => {
     await connectionPage.connectHttp({ host: device.host, tls: device.tls });
     await messagesPage.waitReady();

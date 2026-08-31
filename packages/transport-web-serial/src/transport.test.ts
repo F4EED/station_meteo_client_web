@@ -153,6 +153,13 @@ class FakeSerialPort {
     return Promise.resolve();
   }
 
+  setSignals(_signals?: {
+    dataTerminalReady?: boolean;
+    requestToSend?: boolean;
+  }): Promise<void> {
+    return Promise.resolve();
+  }
+
   close(): Promise<void> {
     try {
       this._readController.close();

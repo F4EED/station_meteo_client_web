@@ -1,4 +1,4 @@
-import { describe, expect, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { runTransportContract } from "../../../tests/utils/transportContract.ts";
 import { TransportWebBluetooth } from "./transport.ts";
 
@@ -87,7 +87,7 @@ function stubWebBluetooth() {
   const deviceEmitter = new MiniEmitter();
 
   // GATT server with readonly connected
-  let isConnected = true;
+  let isConnected = false;
   const gattServer: BluetoothRemoteGATTServer = {
     get connected() {
       return isConnected;
@@ -141,6 +141,8 @@ function stubWebBluetooth() {
 
   // helper actions for tests/contract
   return {
+    fakeDevice,
+    gattServer,
     pushIncoming: (u8: Uint8Array) => {
       incomingQueue.push(u8);
       charEmitter.dispatchEvent(new Event("characteristicvaluechanged"));
@@ -197,5 +199,44 @@ describe("TransportWebBluetooth (contract)", () => {
       ).__ble.triggerGattDisconnect();
       await Promise.resolve();
     },
+  });
+});
+
+describe("TransportWebBluetooth GATT retries", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it("drops a stale GATT session then reconnects", async () => {
+    const ble = stubWebBluetooth();
+    ble.gattServer.disconnect();
+    // Simulate leftover "connected" from a failed notify.
+    await ble.gattServer.connect();
+    expect(ble.gattServer.connected).toBe(true);
+    const disconnectSpy = vi.spyOn(ble.gattServer, "disconnect");
+    await TransportWebBluetooth.createFromDevice(ble.fakeDevice);
+    expect(disconnectSpy).toHaveBeenCalled();
+    ble.cleanup();
+  });
+
+  it("retries gatt.connect() after a transient NetworkError", async () => {
+    const ble = stubWebBluetooth();
+    let attempts = 0;
+    const realConnect = ble.gattServer.connect.bind(ble.gattServer);
+    vi.spyOn(ble.gattServer, "connect").mockImplementation(async () => {
+      attempts += 1;
+      if (attempts < 2) {
+        const err = new Error("Connection attempt failed") as Error & {
+          name: string;
+        };
+        err.name = "NetworkError";
+        throw err;
+      }
+      return realConnect();
+    });
+    await TransportWebBluetooth.createFromDevice(ble.fakeDevice);
+    expect(attempts).toBe(2);
+    ble.cleanup();
   });
 });

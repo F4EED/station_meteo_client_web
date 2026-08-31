@@ -28,7 +28,7 @@ const TRANSPORT_ICON: Record<
  * yet during those phases).
  *
  * Center: device name + transport icon with an animated radial pulse.
- * Surrounding: 4 stat chips (Identity / Channels / Nodes / Metadata)
+ * Surrounding: 4 stat chips (Identity / Metadata / Channels / Config)
  * that flip from gray to green as the SDK reports each piece arriving.
  * Auto-dismisses on "configured" (with a brief success state) or
  * "disconnected" / "error".
@@ -56,7 +56,7 @@ export const ConnectingOverlay = (): ReactElement | null => {
     setShowCancel(false);
     const t = setTimeout(() => setShowCancel(true), STUCK_THRESHOLD_MS);
     return () => clearTimeout(t);
-  }, [active?.id]);
+  }, [active, active?.id]);
 
   if (!active) return null;
 
@@ -125,12 +125,12 @@ export const ConnectingOverlay = (): ReactElement | null => {
             <Chip
               label={t("overlay.chip.channels", { defaultValue: "Channels" })}
               count={counters.channels}
-              done={counters.channels > 0 && progress.phase === "configured"}
+              done={counters.channels > 0}
             />
             <Chip
-              label={t("overlay.chip.nodes", { defaultValue: "Nodes" })}
-              count={counters.nodes}
-              done={counters.nodes > 0 && progress.phase === "configured"}
+              label={t("overlay.chip.config", { defaultValue: "Config" })}
+              count={counters.config}
+              done={counters.config > 0}
             />
           </div>
 

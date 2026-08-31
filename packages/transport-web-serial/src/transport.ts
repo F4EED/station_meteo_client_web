@@ -34,7 +34,13 @@ export class SerialConnectError extends Error {
 }
 
 const PORT_OPEN_RETRY_DELAYS_MS = [250, 500, 750] as const;
-const POST_CLOSE_DELAY_MS = 200;
+const POST_CLOSE_DELAY_MS = 400;
+
+const SERIAL_OPEN_OPTIONS = {
+  baudRate: 115200,
+  bufferSize: 16 * 1024,
+  flowControl: "none" as const,
+};
 
 function isPortBusyError(err: unknown): boolean {
   if (!(err instanceof Error)) return false;
@@ -102,7 +108,10 @@ export class TransportWebSerial implements Transport {
     port: SerialPort,
     baudRate?: number,
   ): Promise<ResultType<TransportWebSerial, SerialConnectError>> {
-    const prep = await TransportWebSerial.preparePort(port, baudRate ?? 115200);
+    const prep = await TransportWebSerial.preparePort(
+      port,
+      baudRate ?? SERIAL_OPEN_OPTIONS.baudRate,
+    );
     if (Result.isError(prep)) return Result.err(prep.error);
     try {
       return Result.ok(new TransportWebSerial(port));
@@ -157,7 +166,10 @@ export class TransportWebSerial implements Transport {
     ) {
       try {
         log.debug("preparePort: open() attempt", { attempt });
-        await port.open({ baudRate });
+        await port.open({
+          ...SERIAL_OPEN_OPTIONS,
+          baudRate,
+        });
         log.debug("preparePort: open() ok", { attempt });
         return Result.ok(true);
       } catch (err) {

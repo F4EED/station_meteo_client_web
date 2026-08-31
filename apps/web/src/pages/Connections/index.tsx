@@ -66,6 +66,7 @@ export const Connections = () => {
   const [addOpen, setAddOpen] = useState(false);
   const isURLHTTPS = useMemo(() => location.protocol === "https:", []);
   const { t } = useTranslation("connections");
+  const { t: tUi } = useTranslation("ui");
 
   // On first mount, sync statuses and refresh
   useEffect(() => {
@@ -104,6 +105,11 @@ export const Connections = () => {
           >
             <ArrowLeft className="size-5" />
           </button>
+          <img
+            src="/logo.png"
+            alt={tUi("app.logo")}
+            className="size-10 flex-shrink-0 rounded-xl self-start"
+          />
           <div>
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
               {t("page.title")}

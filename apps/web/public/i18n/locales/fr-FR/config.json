@@ -454,5 +454,58 @@
       "label": "Radioamateur licencié (HAM)",
       "description": "Enable if you are a licensed amateur radio operator, enabling this option disables encryption and is not compatible with the default Meshtastic network."
     }
+  },
+  "navigation": {
+    "radioConfig": "Configuration radio",
+    "deviceConfig": "Configuration de l'appareil",
+    "moduleConfig": "Configuration du module",
+    "measurementRange": "Plage de mesure"
+  },
+  "measurementRange": {
+    "title": "Plage de mesure",
+    "description": "Moyenne normale, plage (basse/haute) et seuils d’alerte pour chaque grandeur BME688. Les valeurs vivent sur le nœud.",
+    "disconnected": "Connecter le nœud (USB ou Bluetooth) pour lire ou écrire ces valeurs.",
+    "load": "Recharger depuis le nœud",
+    "save": "Enregistrer sur le nœud",
+    "resetDefaults": "Réinitialiser les défauts",
+    "saved": "Plage de mesure enregistrée sur le nœud",
+    "loadError": "Impossible de demander la plage de mesure au nœud",
+    "saveError": "Impossible d’écrire la plage de mesure sur le nœud",
+    "note": "Persisté dans /prefs/station_meteo.dat via PRIVATE_APP. CO2 estimé = 400 + IAQ × 4 (estimateur firmware, pas BSEC Bosch).",
+    "fields": {
+      "mean": "Moyenne normale",
+      "low": "Valeur basse",
+      "high": "Valeur haute",
+      "veryLow": "Très bas",
+      "warnLow": "Bas",
+      "warnHigh": "Haut",
+      "veryHigh": "Très haut"
+    },
+    "quantities": {
+      "temp": {
+        "label": "Température",
+        "unit": "°C"
+      },
+      "humidity": {
+        "label": "Humidité",
+        "unit": "%"
+      },
+      "pressure": {
+        "label": "Pression",
+        "unit": "hPa"
+      },
+      "gasOhm": {
+        "label": "Résistance gaz",
+        "unit": "Ω"
+      },
+      "iaq": {
+        "label": "IAQ",
+        "unit": "0–500"
+      },
+      "co2": {
+        "label": "CO2 estimé",
+        "unit": "ppm"
+      }
+    }
   }
 }

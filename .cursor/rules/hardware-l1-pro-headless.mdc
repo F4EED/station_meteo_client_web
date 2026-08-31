@@ -1,0 +1,22 @@
+---
+description: Matériel cible unique — Seeed Wio Tracker L1 Pro sans écran + BME688
+alwaysApply: true
+---
+
+# Matériel cible : Seeed Wio Tracker L1 Pro (sans écran)
+
+Toute la station météo tourne sur **un seul** nœud : Seeed Studio **Wio Tracker L1 Pro**, **sans écran**, capteur **BME688** I2C Grove **extérieur sous abri**, charge solaire / batterie du L1 Pro.
+
+## Identité
+
+- **Carte** : Seeed Studio Wio Tracker L1 Pro (boîtier + batterie + solaire)
+- **Écran** : **aucun**
+- **SoC** : nRF52840 · **Radio** : SX1262 · **GNSS** : L76K (GPS firmware off par défaut)
+- **Env PlatformIO** : `seeed_wio_tracker_L1_meteo` (pas `seeed_wio_tracker_L1_eink`, pas `L1_Pro_1W`)
+- **Flash** : DFU nRF52 (UF2 / 1200 bps)
+
+## Conséquences
+
+- Interaction via client web / future app Android (BLE / USB), jamais d’UI onboard.
+- Headless : `HAS_SCREEN` 0. BME688 sur Grove `Wire1`, extérieur sous abri. Gaz typique 50–150 kΩ. IAQ / eCO2 = indice VOC, pas NDIR.
+- Rôle Sensor, hop 3, LoRa Gaulix. Doc des défauts : `../README.md`.

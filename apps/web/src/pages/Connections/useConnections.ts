@@ -3,13 +3,22 @@ import {
   startMaintenanceHeartbeat,
   stopHeartbeat,
 } from "@app/core/connections/heartbeat.ts";
-import { buildMeshDevice } from "@app/core/connections/sdkClient.ts";
+import {
+  buildMeshDevice,
+  maybeSyncTimeFromGpsPosition,
+  requestLocalTelemetry,
+  syncDeviceTime,
+} from "@app/core/connections/sdkClient.ts";
 import {
   closeTransport,
   openTransport,
   probeConnection,
 } from "@app/core/connections/transports.ts";
-import { createLogger, DeviceStatusEnum } from "@meshtastic/sdk";
+import {
+  createLogger,
+  DeviceStatusEnum,
+  type MeshDevice,
+} from "@meshtastic/sdk";
 
 const log = createLogger("useConnections");
 import type {
@@ -30,6 +39,84 @@ import { useCallback } from "react";
 //   - configSubscriptions: onConfigComplete unsubscribers.
 const cachedTransports = new Map<ConnectionId, BluetoothDevice | SerialPort>();
 const configSubscriptions = new Map<ConnectionId, () => void>();
+
+const TRANSPORT_READY_MS = 15_000;
+const CONFIG_COMPLETE_RETRY_MS = 6_000;
+const CONFIG_COMPLETE_MAX_TRIES = 3;
+const CONFIG_WAIT_MS =
+  CONFIG_COMPLETE_RETRY_MS * CONFIG_COMPLETE_MAX_TRIES + 2_000;
+const READY_STATUSES = new Set([
+  DeviceStatusEnum.DeviceConnected,
+  DeviceStatusEnum.DeviceConfiguring,
+  DeviceStatusEnum.DeviceConfigured,
+]);
+
+function waitUntilTransportReady(meshDevice: MeshDevice): Promise<void> {
+  const status = meshDevice.meshClient.device.status;
+  if (READY_STATUSES.has(status.value)) {
+    return Promise.resolve();
+  }
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      unsub();
+      reject(
+        new Error(
+          "La liaison n'est pas prête. Réessayez Connect — inutile de recharger la page.",
+        ),
+      );
+    }, TRANSPORT_READY_MS);
+    const unsub = status.subscribe((next) => {
+      if (READY_STATUSES.has(next)) {
+        clearTimeout(timer);
+        unsub();
+        resolve();
+      }
+    });
+    if (READY_STATUSES.has(status.value)) {
+      clearTimeout(timer);
+      unsub();
+      resolve();
+    }
+  });
+}
+
+function waitUntilConfigured(
+  meshDevice: MeshDevice,
+  isConfigured: () => boolean,
+): Promise<void> {
+  if (isConfigured()) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const finish = (fn: () => void): void => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(limitTimer);
+      unsub();
+      fn();
+    };
+    const limitTimer = setTimeout(() => {
+      finish(() =>
+        reject(
+          new Error(
+            "Le nœud n'a pas terminé la configuration. Cliquez Connect — inutile de recharger la page.",
+          ),
+        ),
+      );
+    }, CONFIG_WAIT_MS);
+    const unsub = meshDevice.meshClient.device.status.subscribe((s) => {
+      if (s === DeviceStatusEnum.DeviceConfigured || isConfigured()) {
+        finish(() => resolve());
+      }
+    });
+    if (
+      isConfigured() ||
+      meshDevice.meshClient.device.status.value ===
+        DeviceStatusEnum.DeviceConfigured
+    ) {
+      finish(() => resolve());
+    }
+  });
+}
 
 export function useConnections() {
   const connections = useDeviceStore((s) => s.savedConnections);
@@ -148,6 +235,8 @@ export function useConnections() {
       setActiveConnectionId(id);
       device.setConnectionId(id);
 
+      await waitUntilTransportReady(meshDevice);
+
       // Two paths drive the "configured" transition:
       //   1. The `onConfigComplete` event from the firmware. The handler is
       //      attached AFTER buildMeshDevice, which means MeshClient already
@@ -161,13 +250,25 @@ export function useConnections() {
       //      catch the case the event missed.
       // Either path may fire first; `markConfigured` is idempotent.
       let configuredHandled = false;
+      let configureTries = 0;
+      let configRetryTimer: ReturnType<typeof setInterval> | undefined;
+
+      const stopConfigRetry = (): void => {
+        if (!configRetryTimer) return;
+        clearInterval(configRetryTimer);
+        configRetryTimer = undefined;
+      };
+
       const markConfigured = (source: string): void => {
         if (configuredHandled) return;
         configuredHandled = true;
+        stopConfigRetry();
         log.info("connect transitioned to configured", { id, source });
         device.setConnectionPhase("configured");
         updateStatus(id, "configured");
         startMaintenanceHeartbeat(id, meshDevice);
+        requestLocalTelemetry(meshDevice);
+        syncDeviceTime(meshDevice);
       };
 
       const unsubConfigComplete = meshDevice.events.onConfigComplete.subscribe(
@@ -199,39 +300,80 @@ export function useConnections() {
         log.info("device rebooted — re-entering configuring", { id });
         stopHeartbeat(id);
         configuredHandled = false;
+        configureTries = 0;
         device.setConnectionPhase("configuring");
         updateStatus(id, "configuring");
       });
 
+      const unsubGpsTime = meshDevice.events.onPositionPacket.subscribe(
+        (packet) => maybeSyncTimeFromGpsPosition(meshDevice, packet),
+      );
+
       configSubscriptions.set(id, () => {
+        stopConfigRetry();
         unsubConfigComplete();
         unsubStatusSignal();
         unsubRebooted();
+        unsubGpsTime();
       });
 
-      log.debug("setupMeshDevice: calling configure()", { id });
-      meshDevice
-        .configure()
-        .then(() => {
-          log.debug(
-            "setupMeshDevice: configure() resolved, sending heartbeat",
-            { id },
-          );
-          return meshDevice
-            .heartbeat()
-            .then(() => startConfigHeartbeat(id, meshDevice));
-        })
-        .catch((error) => {
-          const e = error as Error;
-          log.error("setupMeshDevice: configure() rejected", {
-            id,
-            name: e?.name,
-            message: e?.message,
-          });
-          updateStatus(id, "error", error?.message ?? String(error));
+      const sendConfigure = (): void => {
+        if (configuredHandled) return;
+        configureTries += 1;
+        log.debug("setupMeshDevice: calling configure()", {
+          id,
+          configureTries,
         });
+        meshDevice
+          .configure()
+          .then(() => {
+            if (configuredHandled) return;
+            log.debug(
+              "setupMeshDevice: configure() resolved, sending heartbeat",
+              { id },
+            );
+            return meshDevice
+              .heartbeat()
+              .then(() => startConfigHeartbeat(id, meshDevice));
+          })
+          .catch((error) => {
+            const e = error as Error;
+            log.error("setupMeshDevice: configure() rejected", {
+              id,
+              name: e?.name,
+              message: e?.message,
+              configureTries,
+            });
+            if (configuredHandled) return;
+          });
+      };
+
+      sendConfigure();
+      configRetryTimer = setInterval(() => {
+        if (configuredHandled) {
+          stopConfigRetry();
+          return;
+        }
+        const progress = meshDevice.meshClient.progress.value;
+        const handshakeInFlight =
+          progress.phase === "configuring" &&
+          (progress.received.config > 0 ||
+            progress.received.modules > 0 ||
+            progress.received.channels > 0 ||
+            progress.received.myInfo ||
+            progress.received.metadata);
+        if (handshakeInFlight) {
+          return;
+        }
+        if (configureTries >= CONFIG_COMPLETE_MAX_TRIES) {
+          return;
+        }
+        log.info("setupMeshDevice: retry configure()", { id, configureTries });
+        sendConfigure();
+      }, CONFIG_COMPLETE_RETRY_MS);
 
       updateSavedConnection(id, { meshDeviceId: deviceId });
+      await waitUntilConfigured(meshDevice, () => configuredHandled);
       return deviceId;
     },
     [
@@ -267,53 +409,106 @@ export function useConnections() {
         allowPrompt: !!opts?.allowPrompt,
       });
       updateStatus(id, "connecting");
-      try {
-        const cached = cachedTransports.get(id);
-        const result = await openTransport(conn, {
-          allowPrompt: opts?.allowPrompt,
-          cachedBluetoothDevice:
-            conn.type === "bluetooth"
-              ? (cached as BluetoothDevice | undefined)
-              : undefined,
-          cachedSerialPort:
-            conn.type === "serial"
-              ? (cached as SerialPort | undefined)
-              : undefined,
-        });
-        log.debug("connect: openTransport ok", { id });
-        await setupMeshDevice(
-          id,
-          result.transport,
-          result.bluetoothDevice,
-          result.serialPort,
-        );
-        log.info(
-          "connect: setupMeshDevice resolved, awaiting onConfigComplete",
-          { id },
-        );
+      const tries = conn.type === "serial" ? 3 : 1;
+      let lastMessage = "";
+      for (let attempt = 0; attempt < tries; attempt++) {
+        try {
+          if (attempt > 0) {
+            log.warn("connect: serial retry after drop", {
+              id,
+              attempt,
+              lastMessage,
+            });
+            try {
+              await teardown(id, conn);
+            } catch {}
+            await new Promise((r) => setTimeout(r, 800));
+            updateStatus(id, "connecting");
+          }
+          const cached = cachedTransports.get(id);
+          const result = await openTransport(conn, {
+            allowPrompt: opts?.allowPrompt,
+            cachedBluetoothDevice:
+              conn.type === "bluetooth"
+                ? (cached as BluetoothDevice | undefined)
+                : undefined,
+            cachedSerialPort:
+              conn.type === "serial"
+                ? (cached as SerialPort | undefined)
+                : undefined,
+          });
+          log.debug("connect: openTransport ok", { id, attempt });
+          await setupMeshDevice(
+            id,
+            result.transport,
+            result.bluetoothDevice,
+            result.serialPort,
+          );
+          log.info(
+            "connect: setupMeshDevice resolved, awaiting onConfigComplete",
+            { id },
+          );
 
-        // BT-specific: catch device-side disconnect to flip status.
-        result.bluetoothDevice?.addEventListener(
-          "gattserverdisconnected",
-          () => {
-            log.warn("BT gattserverdisconnected", { id });
-            updateStatus(id, "disconnected");
-          },
-        );
-        return true;
-      } catch (err) {
-        const e = err as Error;
-        log.error("connect: failed", {
-          id,
-          name: e?.name,
-          message: e?.message,
-        });
-        const message = err instanceof Error ? err.message : String(err);
-        updateStatus(id, "error", message);
-        return false;
+          result.bluetoothDevice?.addEventListener(
+            "gattserverdisconnected",
+            () => {
+              log.warn("BT gattserverdisconnected", { id });
+              updateStatus(id, "disconnected");
+            },
+          );
+          if (result.serialPort && navigator.serial) {
+            navigator.serial.addEventListener(
+              "disconnect",
+              (ev: Event) => {
+                const { port } = ev as unknown as { port?: SerialPort };
+                if (port && port === result.serialPort) {
+                  log.warn("USB serial disconnect", { id });
+                  const cur = useDeviceStore
+                    .getState()
+                    .savedConnections.find((c) => c.id === id);
+                  if (
+                    cur?.status === "configured" ||
+                    cur?.status === "connected"
+                  ) {
+                    updateStatus(id, "disconnected");
+                  }
+                }
+              },
+              { once: true },
+            );
+          }
+          return true;
+        } catch (err) {
+          const e = err as Error;
+          lastMessage = e?.message ?? String(err);
+          log.error("connect: failed", {
+            id,
+            attempt,
+            name: e?.name,
+            message: lastMessage,
+          });
+          const retryable =
+            conn.type === "serial" &&
+            attempt < tries - 1 &&
+            /connection lost|not ready|streams gone|busy|already open|could not open/i.test(
+              lastMessage,
+            );
+          if (!retryable) {
+            try {
+              await teardown(id, conn);
+            } catch {}
+            updateStatus(id, "error", lastMessage);
+            return false;
+          }
+        }
       }
+      try {
+        await teardown(id, conn);
+      } catch {}
+      updateStatus(id, "error", lastMessage);
+      return false;
     },
-    [updateStatus, setupMeshDevice],
+    [updateStatus, setupMeshDevice, teardown],
   );
 
   const disconnect = useCallback(

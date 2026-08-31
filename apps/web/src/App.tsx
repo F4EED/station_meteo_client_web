@@ -13,7 +13,6 @@ import { Connections } from "@pages/Connections/index.tsx";
 import { Outlet } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { ErrorBoundary } from "react-error-boundary";
-import { MapProvider } from "react-map-gl/maplibre";
 
 export function App() {
   useTheme();
@@ -44,9 +43,7 @@ export function App() {
                   <KeyBackupReminder />
                   <RegionSetupReminder />
                   <CommandPalette />
-                  <MapProvider>
-                    <Outlet />
-                  </MapProvider>
+                  <Outlet />
                 </div>
               ) : (
                 <>

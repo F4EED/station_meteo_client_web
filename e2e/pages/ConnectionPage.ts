@@ -4,7 +4,7 @@ import { expect, type Page } from "@playwright/test";
  * Drives the "Add Connection" dialog to connect to a device over the HTTP(S)
  * phone API. The dialog defaults to the HTTP tab; "Save connection" only enables
  * after a successful "Test connection". On success the app navigates to
- * /messages/broadcast/0.
+ * /meteo.
  */
 export class ConnectionPage {
   constructor(private readonly page: Page) {}
@@ -46,7 +46,7 @@ export class ConnectionPage {
     });
     await save.click();
 
-    await expect(page).toHaveURL(/\/messages\/broadcast\/0/, {
+    await expect(page).toHaveURL(/\/meteo/, {
       timeout: 60_000,
     });
   }

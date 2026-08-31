@@ -3,10 +3,7 @@ import { SidebarButton } from "@components/UI/Sidebar/SidebarButton.tsx";
 import { SidebarSection } from "@components/UI/Sidebar/SidebarSection.tsx";
 import { Spinner } from "@components/UI/Spinner.tsx";
 import { Subtle } from "@components/UI/Typography/Subtle.tsx";
-import {
-  useMyNodeAsProto,
-  useNodesAsProto,
-} from "@core/hooks/useNodesAsProto.ts";
+import { useMyNodeAsProto } from "@core/hooks/useNodesAsProto.ts";
 import {
   type Page,
   useActiveConnection,
@@ -16,18 +13,14 @@ import {
   useSidebar,
 } from "@core/stores";
 import { cn } from "@core/utils/cn.ts";
-import { useTotalUnread } from "@meshtastic/sdk-react";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import {
   CircleChevronLeft,
   type LucideIcon,
-  MapIcon,
-  MessageSquareIcon,
+  CloudSunIcon,
   SettingsIcon,
-  UsersIcon,
 } from "lucide-react";
 import type React from "react";
-import { useEffect, useState, useTransition } from "react";
 import { useTranslation } from "react-i18next";
 import { DeviceInfoPanel } from "./DeviceInfoPanel.tsx";
 
@@ -75,11 +68,8 @@ const CollapseToggleButton = () => {
 
 export const Sidebar = ({ children }: SidebarProps) => {
   const { metadata, setDialogOpen } = useDevice();
-  const numUnread = useTotalUnread();
-  const allNodes = useNodesAsProto();
   const { setCommandPaletteOpen } = useAppStore();
   const myNode = useMyNodeAsProto();
-  const getNodesLength = () => allNodes.length;
   const { isCollapsed } = useSidebar();
   const { t } = useTranslation("ui");
   const navigate = useNavigate({ from: "/" });
@@ -97,39 +87,15 @@ export const Sidebar = ({ children }: SidebarProps) => {
   });
 
   const myMetadata = metadata.get(0);
-
-  const [displayedNodeCount, setDisplayedNodeCount] = useState(() =>
-    Math.max(getNodesLength() - 1, 0),
-  );
-
-  const [_, startNodeCountTransition] = useTransition();
-
-  const currentNodeCountValue = Math.max(getNodesLength() - 1, 0);
-
-  useEffect(() => {
-    if (currentNodeCountValue !== displayedNodeCount) {
-      startNodeCountTransition(() => {
-        setDisplayedNodeCount(currentNodeCountValue);
-      });
-    }
-  }, [currentNodeCountValue, displayedNodeCount]);
+  const stillStreaming =
+    activeConnection?.status === "connecting" ||
+    activeConnection?.status === "configuring";
 
   const pages: NavLink[] = [
     {
-      name: t("navigation.messages"),
-      icon: MessageSquareIcon,
-      page: "messages",
-      count: numUnread ? numUnread : undefined,
-    },
-    {
-      name: `${t("navigation.nodes")} (${displayedNodeCount})`,
-      icon: UsersIcon,
-      page: "nodes",
-    },
-    {
-      name: t("navigation.map"),
-      icon: MapIcon,
-      page: "map",
+      name: t("navigation.meteo"),
+      icon: CloudSunIcon,
+      page: "meteo",
     },
     {
       name: t("navigation.settings"),
@@ -156,7 +122,7 @@ export const Sidebar = ({ children }: SidebarProps) => {
         )}
       >
         <img
-          src="/logo.svg"
+          src="/logo.png"
           alt={t("app.logo")}
           className="size-10 flex-shrink-0 rounded-xl"
         />
@@ -182,12 +148,12 @@ export const Sidebar = ({ children }: SidebarProps) => {
               label={link.name}
               Icon={link.icon}
               onClick={() => {
-                if (myNode !== undefined) {
-                  navigate({ to: `/${link.page}` });
-                }
+                navigate({ to: `/${link.page}` });
               }}
-              active={link.page === pathname}
-              disabled={myNode === undefined}
+              active={
+                pathname === link.page || pathname.startsWith(`${link.page}/`)
+              }
+              disabled={stillStreaming && myNode === undefined}
             />
           );
         })}
@@ -198,7 +164,7 @@ export const Sidebar = ({ children }: SidebarProps) => {
       </div>
 
       <div className=" pt-4 border-t-[0.5px] bg-background-primary border-slate-300 dark:border-slate-700 h-full flex-1">
-        {myNode === undefined ? (
+        {myNode === undefined && stillStreaming ? (
           <div className="flex flex-col items-center justify-center py-6">
             <Spinner />
             <Subtle
@@ -215,15 +181,15 @@ export const Sidebar = ({ children }: SidebarProps) => {
             isCollapsed={isCollapsed}
             setCommandPaletteOpen={() => setCommandPaletteOpen(true)}
             setDialogOpen={() => setDialogOpen("deviceName", true)}
-            user={myNode.user}
+            user={myNode?.user}
             firmwareVersion={
               myMetadata?.firmwareVersion ?? t("unknown.notAvailable")
             }
             deviceMetrics={{
-              batteryLevel: myNode.deviceMetrics?.batteryLevel,
+              batteryLevel: myNode?.deviceMetrics?.batteryLevel,
               voltage:
-                typeof myNode.deviceMetrics?.voltage === "number"
-                  ? Math.abs(myNode.deviceMetrics?.voltage)
+                typeof myNode?.deviceMetrics?.voltage === "number"
+                  ? Math.abs(myNode.deviceMetrics.voltage)
                   : undefined,
             }}
             connectionStatus={activeConnection?.status}

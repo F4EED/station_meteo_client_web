@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="80" y1="40" x2="430" y2="470" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0b3a4a"/>
+      <stop offset="1" stop-color="#14532d"/>
+    </linearGradient>
+    <linearGradient id="roof" x1="160" y1="210" x2="352" y2="268" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2dd4bf"/>
+      <stop offset="1" stop-color="#0f766e"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <circle cx="168" cy="168" r="42" fill="#facc15"/>
+  <g fill="none" stroke="#facc15" stroke-width="8" stroke-linecap="round">
+    <path d="M168 108v14"/><path d="M168 214v14"/>
+    <path d="M108 168h14"/><path d="M214 168h14"/>
+    <path d="M126 126l10 10"/><path d="M200 200l10 10"/>
+    <path d="M210 126l-10 10"/><path d="M136 200l-10 10"/>
+  </g>
+  <ellipse cx="210" cy="176" rx="58" ry="32" fill="#f8fafc"/>
+  <ellipse cx="248" cy="168" rx="42" ry="28" fill="#e2e8f0"/>
+  <ellipse cx="176" cy="184" rx="36" ry="22" fill="#e2e8f0"/>
+  <path d="M160 268 L256 214 L352 268 Z" fill="url(#roof)"/>
+  <rect x="176" y="268" width="160" height="132" rx="10" fill="#f8fafc"/>
+  <g fill="none" stroke="#94a3b8" stroke-width="7">
+    <path d="M188 292h136"/><path d="M188 314h136"/>
+    <path d="M188 336h136"/><path d="M188 358h136"/>
+  </g>
+  <rect x="236" y="300" width="16" height="72" rx="8" fill="#cbd5e1"/>
+  <rect x="239" y="332" width="10" height="36" rx="5" fill="#ef4444"/>
+  <circle cx="244" cy="372" r="12" fill="#ef4444"/>
+  <rect x="228" y="400" width="56" height="14" rx="4" fill="#e2e8f0"/>
+  <rect x="248" y="198" width="16" height="22" rx="4" fill="#f8fafc"/>
+  <g fill="none" stroke="#67ea94" stroke-width="14" stroke-linecap="round">
+    <path d="M278 168a42 42 0 0 1 42 42"/>
+    <path d="M298 148a70 70 0 0 1 70 70"/>
+    <path d="M318 128a98 98 0 0 1 98 98"/>
+  </g>
+</svg>

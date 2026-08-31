@@ -1,4 +1,4 @@
-import { deviceRoute, moduleRoute, radioRoute } from "@app/routes";
+import { deviceRoute, moduleRoute, radioRoute, rangeRoute } from "@app/routes";
 import { PageLayout } from "@components/PageLayout.tsx";
 import { Sidebar } from "@components/Sidebar.tsx";
 import { SidebarButton } from "@components/UI/Sidebar/SidebarButton.tsx";
@@ -7,9 +7,11 @@ import { useToast } from "@core/hooks/useToast.ts";
 import { cn } from "@core/utils/cn.ts";
 import { useConfigEditor, useSignal } from "@meshtastic/sdk-react";
 import { DeviceConfig } from "@pages/Settings/DeviceConfig.tsx";
+import { MeasurementRange } from "@pages/Settings/MeasurementRange.tsx";
 import { ModuleConfig } from "@pages/Settings/ModuleConfig.tsx";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import {
+  GaugeIcon,
   LayersIcon,
   RadioTowerIcon,
   RefreshCwIcon,
@@ -90,6 +92,14 @@ const ConfigPage = () => {
         icon: LayersIcon,
         changeCount: channelChangeCount,
         component: ModuleConfig,
+      },
+      {
+        key: "range",
+        route: rangeRoute,
+        label: t("navigation.measurementRange"),
+        icon: GaugeIcon,
+        changeCount: 0,
+        component: MeasurementRange,
       },
     ],
     [t, configChangeCount, moduleConfigChangeCount, channelChangeCount],

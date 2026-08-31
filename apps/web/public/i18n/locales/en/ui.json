@@ -1,6 +1,7 @@
 {
   "navigation": {
     "title": "Navigation",
+    "meteo": "Weather",
     "messages": "Messages",
     "map": "Map",
     "settings": "Settings",
@@ -9,11 +10,12 @@
     "deviceConfig": "Device Config",
     "moduleConfig": "Module Config",
     "manageConnections": "Manage Connections",
-    "nodes": "Nodes"
+    "nodes": "Nodes",
+    "measurementRange": "Measurement range"
   },
   "app": {
-    "title": "Meshtastic",
-    "logo": "Meshtastic Logo"
+    "title": "Weather station",
+    "logo": "Weather station logo"
   },
   "sidebar": {
     "collapseToggle": {
@@ -42,14 +44,28 @@
     "commandPalette": "Search commands..."
   },
   "toast": {
-    "positionRequestSent": { "title": "Position request sent." },
-    "requestingPosition": { "title": "Requesting position, please wait..." },
-    "sendingTraceroute": { "title": "Sending Traceroute, please wait..." },
-    "tracerouteSent": { "title": "Traceroute sent." },
-    "savedChannel": { "title": "Saved Channel: {{channelName}}" },
+    "positionRequestSent": {
+      "title": "Position request sent."
+    },
+    "requestingPosition": {
+      "title": "Requesting position, please wait..."
+    },
+    "sendingTraceroute": {
+      "title": "Sending Traceroute, please wait..."
+    },
+    "tracerouteSent": {
+      "title": "Traceroute sent."
+    },
+    "savedChannel": {
+      "title": "Saved Channel: {{channelName}}"
+    },
     "messages": {
-      "pkiEncryption": { "title": "Chat is using PKI encryption." },
-      "pskEncryption": { "title": "Chat is using PSK encryption." }
+      "pkiEncryption": {
+        "title": "Chat is using PKI encryption."
+      },
+      "pskEncryption": {
+        "title": "Chat is using PSK encryption."
+      }
     },
     "configSaveError": {
       "title": "Error Saving Config",
@@ -212,5 +228,23 @@
   "footer": {
     "text": "Powered by <0>▲ Vercel</0> | Meshtastic® is a registered trademark of Meshtastic LLC. | <1>Legal Information</1>",
     "commitSha": "Commit SHA: {{sha}}"
+  },
+  "meteo": {
+    "title": "Weather",
+    "environment": "Environment (BME688)",
+    "power": "Power",
+    "temperature": "Temperature",
+    "humidity": "Humidity",
+    "pressure": "Pressure",
+    "iaq": "IAQ",
+    "gas": "Gas resistance",
+    "battery": "Battery",
+    "voltage": "Voltage",
+    "waiting": "No telemetry yet. Connect the L1 Pro (BLE or USB) and wait for a reading.",
+    "lastUpdate": "Last reading: {{time}}",
+    "co2": "Estimated CO2",
+    "dewPoint": "Dew point",
+    "feelsLike": "Feels like",
+    "iaqHeating": "Gas heater warming up…"
   }
 }

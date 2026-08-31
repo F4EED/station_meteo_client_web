@@ -55,6 +55,21 @@ export class NodesClient {
       this.handleIncoming(info),
     );
 
+    // Handshake SPECIAL_NONCE_ONLY_CONFIG still sends MyInfo, but the
+    // follow-up own-NodeInfo packet can be skipped (empty iterator, oversized
+    // encode). Without a store entry the web sidebar stays on "Chargement…"
+    // forever even after configComplete. Seed a stub as soon as we know our
+    // node number; a later NodeInfo packet overwrites it with user/metrics.
+    client.events.onMyNodeInfo.subscribe((info) => {
+      const num = info.myNodeNum;
+      if (!num || this.store.has(num)) return;
+      this.store.set(num, {
+        num,
+        isFavorite: true,
+        isIgnored: false,
+      });
+    });
+
     client.events.onUserPacket.subscribe((packet) => {
       this.patch(packet.from, { user: packet.data });
     });

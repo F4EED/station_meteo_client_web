@@ -16,49 +16,51 @@ export const fromDeviceStream: () => TransformStream<
       let processingExhausted = false;
       while (byteBuffer.length !== 0 && !processingExhausted) {
         const framingIndex = byteBuffer.indexOf(0x94);
-        const framingByte2 = byteBuffer[framingIndex + 1];
-        if (framingByte2 === 0xc3) {
-          if (byteBuffer.subarray(0, framingIndex).length) {
+        if (framingIndex === -1) {
+          controller.enqueue({
+            type: "debug",
+            data: textDecoder.decode(byteBuffer),
+          });
+          byteBuffer = new Uint8Array([]);
+          break;
+        }
+        if (framingIndex + 1 >= byteBuffer.length) {
+          processingExhausted = true;
+          break;
+        }
+        if (byteBuffer[framingIndex + 1] !== 0xc3) {
+          if (framingIndex > 0) {
             controller.enqueue({
               type: "debug",
               data: textDecoder.decode(byteBuffer.subarray(0, framingIndex)),
             });
-            byteBuffer = byteBuffer.subarray(framingIndex);
           }
+          byteBuffer = byteBuffer.subarray(framingIndex + 1);
+          continue;
+        }
+        if (framingIndex > 0) {
+          controller.enqueue({
+            type: "debug",
+            data: textDecoder.decode(byteBuffer.subarray(0, framingIndex)),
+          });
+          byteBuffer = byteBuffer.subarray(framingIndex);
+        }
 
-          const msb = byteBuffer[2];
-          const lsb = byteBuffer[3];
+        const msb = byteBuffer[2];
+        const lsb = byteBuffer[3];
 
-          if (
-            msb !== undefined &&
-            lsb !== undefined &&
-            byteBuffer.length >= 4 + (msb << 8) + lsb
-          ) {
-            const packet = byteBuffer.subarray(4, 4 + (msb << 8) + lsb);
-
-            const malformedDetectorIndex = packet.indexOf(0x94);
-            if (
-              malformedDetectorIndex !== -1 &&
-              packet[malformedDetectorIndex + 1] === 0xc3
-            ) {
-              console.warn(
-                `⚠️ Malformed packet found, discarding: ${byteBuffer
-                  .subarray(0, malformedDetectorIndex - 1)
-                  .toString()}`,
-              );
-
-              byteBuffer = byteBuffer.subarray(malformedDetectorIndex);
-            } else {
-              byteBuffer = byteBuffer.subarray(3 + (msb << 8) + lsb + 1);
-
-              controller.enqueue({
-                type: "packet",
-                data: packet,
-              });
-            }
-          } else {
-            processingExhausted = true;
-          }
+        if (
+          msb !== undefined &&
+          lsb !== undefined &&
+          byteBuffer.length >= 4 + (msb << 8) + lsb
+        ) {
+          const packetLen = (msb << 8) + lsb;
+          const packet = byteBuffer.subarray(4, 4 + packetLen);
+          byteBuffer = byteBuffer.subarray(4 + packetLen);
+          controller.enqueue({
+            type: "packet",
+            data: packet,
+          });
         } else {
           processingExhausted = true;
         }

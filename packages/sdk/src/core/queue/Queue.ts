@@ -114,10 +114,13 @@ export class Queue {
             await writer.write(item.data);
             item.sent = true;
           } catch (error) {
-            const err = error as { code?: string };
+            const err = error as { code?: string; name?: string };
             if (
               err?.code === "ECONNRESET" ||
-              err?.code === "ERR_INVALID_STATE"
+              err?.code === "ERR_INVALID_STATE" ||
+              err?.name === "InvalidStateError" ||
+              err?.name === "NetworkError" ||
+              err?.name === "TypeError"
             ) {
               writer.releaseLock();
               this.lock = false;

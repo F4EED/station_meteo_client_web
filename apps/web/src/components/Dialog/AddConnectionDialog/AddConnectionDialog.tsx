@@ -163,7 +163,7 @@ const FeatureErrorMessage = ({ missingFeatures, tabId }: FeatureErrorProps) => {
 };
 
 const initialState: DialogState = {
-  tab: "http",
+  tab: "serial",
   name: "",
   protocol: "http",
   url: "",
@@ -247,10 +247,14 @@ function PickerRow({
   );
 }
 
-const TAB_META: Array<{ key: TabKey; label: string; Icon: LucideIcon }> = [
-  { key: "http", label: "HTTP", Icon: Globe },
-  { key: "bluetooth", label: "Bluetooth", Icon: Bluetooth },
-  { key: "serial", label: "Serial", Icon: Cable },
+const TAB_META: Array<{ key: TabKey; labelKey: string; Icon: LucideIcon }> = [
+  { key: "serial", labelKey: "addConnection.tabs.usb", Icon: Cable },
+  {
+    key: "bluetooth",
+    labelKey: "addConnection.tabs.bluetooth",
+    Icon: Bluetooth,
+  },
+  { key: "http", labelKey: "addConnection.tabs.ip", Icon: Globe },
 ];
 
 export default function AddConnectionDialog({
@@ -269,7 +273,7 @@ export default function AddConnectionDialog({
     dialogStateInitializer(isHTTPS ? { protocol: "https" } : {}),
   );
   const { unsupported } = useBrowserFeatureDetection();
-  const { t } = useTranslation();
+  const { t } = useTranslation("dialog");
 
   const bluetoothSupported =
     typeof navigator !== "undefined" && "bluetooth" in navigator;
@@ -634,10 +638,10 @@ export default function AddConnectionDialog({
         }
       >
         <TabsList className="grid grid-cols-3">
-          {TAB_META.map(({ key, label, Icon }) => (
+          {TAB_META.map(({ key, labelKey, Icon }) => (
             <TabsTrigger key={key} value={key} className="gap-2">
               <Icon className="h-4 w-4" />
-              {label}
+              {t(labelKey)}
             </TabsTrigger>
           ))}
         </TabsList>

@@ -1,0 +1,12 @@
+---
+description: Doc client web station météo
+alwaysApply: true
+---
+
+# Documentation
+
+Ce dépôt = **client web** seulement (BLE / USB, nœud L1 Pro headless). Navigation : télémétrie + réglages. Pas de messagerie, liste de nœuds ni carte.
+
+Le projet global (matériel, firmware, Gaulix, télémétrie) est `../README.md`. Ne pas recréer Meshtastic.md / HARDWARE.md / etc. ici ni à la racine parent.
+
+Toute adaptation UI / SDK de la station se documente dans **ce** `README.md` (section station, au-dessus du README Meshtastic amont).

@@ -1,11 +1,11 @@
 {
   "page": {
-    "title": "Connect to a Meshtastic device",
-    "description": "Add a device connection via HTTP, Bluetooth, or Serial. Your saved connections will be saved in your browser."
+    "title": "Connecter la station météo",
+    "description": "USB (Web Serial), Bluetooth (Web Bluetooth) ou IP. Les connexions sont enregistrées dans le navigateur."
   },
-  "connectionType_ble": "BLE",
-  "connectionType_serial": "Série",
-  "connectionType_network": "Réseau",
+  "connectionType_ble": "Bluetooth",
+  "connectionType_serial": "USB",
+  "connectionType_network": "IP",
   "deleteConnection": "Delete connection",
   "areYouSure": "This will remove {{name}}. You canot undo this action.",
   "moreActions": "More actions",
@@ -30,5 +30,20 @@
     "added": "Connection added",
     "savedByName": "{{name}} saved.",
     "savedCantConnect": "The connection was saved but could not connect."
+  },
+  "overlay": {
+    "srTitle": "Connexion à l’appareil",
+    "phase": {
+      "connecting": "Ouverture du port…",
+      "configuring": "Réception de la configuration…"
+    },
+    "chip": {
+      "identity": "Identité",
+      "metadata": "Métadonnées",
+      "channels": "Canaux",
+      "config": "Config"
+    },
+    "stuckHint": "Plus long que d’habitude. L’appareil est peut-être en mode CLI / bootloader, ou ne répond pas.",
+    "cancel": "Annuler"
   }
 }

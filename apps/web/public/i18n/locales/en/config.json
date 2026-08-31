@@ -583,5 +583,58 @@
       "label": "Hardware model",
       "description": "Read-only — reported by the device"
     }
+  },
+  "navigation": {
+    "radioConfig": "Radio Config",
+    "deviceConfig": "Device Config",
+    "moduleConfig": "Module Config",
+    "measurementRange": "Measurement range"
+  },
+  "measurementRange": {
+    "title": "Measurement range",
+    "description": "Normal mean, range (low/high) and alert bands for each BME688 quantity. Values are stored on the node.",
+    "disconnected": "Connect the node (USB or Bluetooth) to read or write these values.",
+    "load": "Reload from node",
+    "save": "Save on node",
+    "resetDefaults": "Reset to defaults",
+    "saved": "Measurement range saved on the node",
+    "loadError": "Could not request measurement range from the node",
+    "saveError": "Could not write measurement range to the node",
+    "note": "Persisted as /prefs/station_meteo.dat via PRIVATE_APP. Estimated CO2 = 400 + IAQ × 4 (firmware estimator, not Bosch BSEC).",
+    "fields": {
+      "mean": "Normal mean",
+      "low": "Range low",
+      "high": "Range high",
+      "veryLow": "Very low",
+      "warnLow": "Low",
+      "warnHigh": "High",
+      "veryHigh": "Very high"
+    },
+    "quantities": {
+      "temp": {
+        "label": "Temperature",
+        "unit": "°C"
+      },
+      "humidity": {
+        "label": "Humidity",
+        "unit": "%"
+      },
+      "pressure": {
+        "label": "Pressure",
+        "unit": "hPa"
+      },
+      "gasOhm": {
+        "label": "Gas resistance",
+        "unit": "Ω"
+      },
+      "iaq": {
+        "label": "IAQ",
+        "unit": "0–500"
+      },
+      "co2": {
+        "label": "Estimated CO2",
+        "unit": "ppm"
+      }
+    }
   }
 }

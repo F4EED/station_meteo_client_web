@@ -1,16 +1,26 @@
 {
-  "name": "Meshtastic",
-  "short_name": "Web Client",
+  "name": "Station météo",
+  "short_name": "StMétéo",
   "start_url": ".",
-  "description": "Meshtastic Web App",
+  "description": "Client web mini station météo",
   "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    },
     {
       "src": "/logo.svg",
       "sizes": "any",
       "type": "image/svg+xml"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
     }
   ],
-  "theme_color": "#67ea94",
-  "background_color": "#67ea94",
+  "theme_color": "#0b3a4a",
+  "background_color": "#0b3a4a",
   "display": "standalone"
 }
