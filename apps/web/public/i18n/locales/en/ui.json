@@ -245,6 +245,9 @@
     "co2": "Estimated CO2",
     "dewPoint": "Dew point",
     "feelsLike": "Feels like",
-    "iaqHeating": "Gas heater warming up…"
+    "iaqHeating": "Gas heater warming up…",
+    "statusOk": "In typical range",
+    "statusWarn": "Slightly off typical",
+    "statusAlert": "Far from typical"
   }
 }

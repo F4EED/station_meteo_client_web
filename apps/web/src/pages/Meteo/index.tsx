@@ -25,8 +25,19 @@ import {
 } from "lucide-react";
 import { dewPointC, feelsLikeC } from "@core/stationMeteo/derivedWeather.ts";
 import {
+  batteryLevel,
+  co2Level,
+  dewPointLevel,
   estimatedCo2Ppm,
+  feelsLikeLevel,
+  gasOhmLevel,
+  humidityLevel,
+  iaqLevel,
+  type MetricLevel,
+  pressureLevel,
   resolveIaq,
+  temperatureLevel,
+  voltageLevel,
 } from "@core/stationMeteo/measurementRange.ts";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -89,16 +100,27 @@ export default function MeteoPage() {
     env?.barometricPressure !== undefined;
   const iaqOrPending =
     iaq !== undefined ? String(iaq) : envPresent ? t("meteo.iaqHeating") : "—";
-  const co2OrPending =
-    iaq !== undefined
-      ? `${Math.round(estimatedCo2Ppm(iaq))} ppm`
-      : envPresent
-        ? t("meteo.iaqHeating")
-        : "—";
   const gasOhm =
     env?.gasResistance !== undefined && env.gasResistance > 0
       ? env.gasResistance * 1000
       : undefined;
+  const dewPoint = dewPointC(env?.temperature, env?.relativeHumidity);
+  const feelsLike = feelsLikeC(env?.temperature, env?.relativeHumidity);
+  const co2Ppm = iaq !== undefined ? estimatedCo2Ppm(iaq) : undefined;
+  const co2OrPending =
+    co2Ppm !== undefined
+      ? `${Math.round(co2Ppm)} ppm`
+      : envPresent
+        ? t("meteo.iaqHeating")
+        : "—";
+  const statusLabel = (level: MetricLevel) =>
+    t(
+      level === "ok"
+        ? "meteo.statusOk"
+        : level === "warn"
+          ? "meteo.statusWarn"
+          : "meteo.statusAlert",
+    );
 
   const envCards = [
     {
@@ -106,48 +128,56 @@ export default function MeteoPage() {
       label: t("meteo.temperature"),
       value: fmt(env?.temperature, 1, " °C"),
       icon: ThermometerIcon,
+      level: temperatureLevel(env?.temperature),
     },
     {
       key: "humidity",
       label: t("meteo.humidity"),
       value: fmt(env?.relativeHumidity, 0, " %"),
       icon: DropletsIcon,
+      level: humidityLevel(env?.relativeHumidity),
     },
     {
       key: "dewPoint",
       label: t("meteo.dewPoint"),
-      value: fmt(dewPointC(env?.temperature, env?.relativeHumidity), 1, " °C"),
+      value: fmt(dewPoint, 1, " °C"),
       icon: CloudFogIcon,
+      level: dewPointLevel(dewPoint),
     },
     {
       key: "feelsLike",
       label: t("meteo.feelsLike"),
-      value: fmt(feelsLikeC(env?.temperature, env?.relativeHumidity), 1, " °C"),
+      value: fmt(feelsLike, 1, " °C"),
       icon: ThermometerSunIcon,
+      level: feelsLikeLevel(feelsLike),
     },
     {
       key: "pressure",
       label: t("meteo.pressure"),
       value: fmt(env?.barometricPressure, 1, " hPa"),
       icon: GaugeIcon,
+      level: pressureLevel(env?.barometricPressure),
     },
     {
       key: "iaq",
       label: t("meteo.iaq"),
       value: iaqOrPending,
       icon: LeafIcon,
+      level: iaqLevel(iaq),
     },
     {
       key: "gas",
       label: t("meteo.gas"),
       value: fmt(gasOhm, 0, " Ω"),
       icon: WindIcon,
+      level: gasOhmLevel(gasOhm),
     },
     {
       key: "co2",
       label: t("meteo.co2"),
       value: co2OrPending,
       icon: CloudIcon,
+      level: co2Level(co2Ppm),
     },
   ];
 
@@ -162,12 +192,14 @@ export default function MeteoPage() {
             : `${device.batteryLevel} %`
           : "—",
       icon: BatteryChargingIcon,
+      level: batteryLevel(device?.batteryLevel),
     },
     {
       key: "voltage",
       label: t("meteo.voltage"),
       value: fmt(device?.voltage ?? power?.ch1Voltage, 2, " V"),
       icon: ZapIcon,
+      level: voltageLevel(device?.voltage ?? power?.ch1Voltage),
     },
   ];
 
@@ -187,7 +219,7 @@ export default function MeteoPage() {
           </h2>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {envCards.map(({ key, ...card }) => (
-              <MetricCard key={key} {...card} />
+              <MetricCard key={key} {...card} statusLabel={statusLabel} />
             ))}
           </div>
         </section>
@@ -197,7 +229,7 @@ export default function MeteoPage() {
           </h2>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {powerCards.map(({ key, ...card }) => (
-              <MetricCard key={key} {...card} />
+              <MetricCard key={key} {...card} statusLabel={statusLabel} />
             ))}
           </div>
         </section>
@@ -217,10 +249,14 @@ function MetricCard({
   label,
   value,
   icon: Icon,
+  level,
+  statusLabel,
 }: {
   label: string;
   value: string;
   icon: typeof ThermometerIcon;
+  level?: MetricLevel;
+  statusLabel: (level: MetricLevel) => string;
 }) {
   return (
     <Card>
@@ -231,7 +267,26 @@ function MetricCard({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <p className={cn("text-2xl font-semibold tabular-nums")}>{value}</p>
+        <p
+          className={cn(
+            "flex items-center gap-2 text-2xl font-semibold tabular-nums",
+          )}
+        >
+          <span>{value}</span>
+          {level ? (
+            <span
+              data-testid={`meteo-status-${level}`}
+              className={cn(
+                "inline-block size-3 shrink-0 rounded-full",
+                level === "ok" && "bg-green-600",
+                level === "warn" && "bg-orange-500",
+                level === "alert" && "bg-red-500",
+              )}
+              title={statusLabel(level)}
+              aria-label={statusLabel(level)}
+            />
+          ) : null}
+        </p>
       </CardContent>
     </Card>
   );

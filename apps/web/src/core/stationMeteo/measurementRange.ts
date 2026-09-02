@@ -104,6 +104,110 @@ export const DEFAULT_PREFS: MeasurementRangePrefs = {
   },
 };
 
+export type MetricLevel = "ok" | "warn" | "alert";
+export type BandSense = "twoSided" | "lowerBetter" | "higherBetter";
+
+/** Client-only bands (not in the STMET 180-byte payload). */
+export const DEW_POINT_BAND: MeasurementBand = {
+  mean: 10,
+  low: -5,
+  high: 18,
+  veryLow: -15,
+  warnLow: 0,
+  warnHigh: 15,
+  veryHigh: 20,
+};
+
+export const BATTERY_BAND: MeasurementBand = {
+  mean: 80,
+  low: 20,
+  high: 100,
+  veryLow: 10,
+  warnLow: 30,
+  warnHigh: 100,
+  veryHigh: 100,
+};
+
+export const VOLTAGE_BAND: MeasurementBand = {
+  mean: 3.7,
+  low: 3.4,
+  high: 4.2,
+  veryLow: 3.2,
+  warnLow: 3.55,
+  warnHigh: 4.2,
+  veryHigh: 4.35,
+};
+
+const BATTERY_PLUGGED_IN = 100;
+
+/**
+ * Green / orange / red traffic light vs a measurement band.
+ * ok = typical, warn = a bit off, alert = far off.
+ */
+export function metricLevel(
+  value: number | undefined,
+  band: MeasurementBand,
+  sense: BandSense,
+): MetricLevel | undefined {
+  if (value === undefined || !Number.isFinite(value)) return undefined;
+  switch (sense) {
+    case "twoSided":
+      if (value < band.veryLow || value > band.veryHigh) return "alert";
+      if (value < band.warnLow || value > band.warnHigh) return "warn";
+      return "ok";
+    case "lowerBetter":
+      if (value > band.veryHigh) return "alert";
+      if (value > band.warnHigh) return "warn";
+      return "ok";
+    case "higherBetter":
+      if (value < band.veryLow) return "alert";
+      if (value < band.warnLow) return "warn";
+      return "ok";
+  }
+}
+
+export function temperatureLevel(value?: number): MetricLevel | undefined {
+  return metricLevel(value, DEFAULT_PREFS.temp, "twoSided");
+}
+
+export function humidityLevel(value?: number): MetricLevel | undefined {
+  return metricLevel(value, DEFAULT_PREFS.humidity, "twoSided");
+}
+
+export function pressureLevel(value?: number): MetricLevel | undefined {
+  return metricLevel(value, DEFAULT_PREFS.pressure, "twoSided");
+}
+
+export function dewPointLevel(value?: number): MetricLevel | undefined {
+  return metricLevel(value, DEW_POINT_BAND, "twoSided");
+}
+
+export function feelsLikeLevel(value?: number): MetricLevel | undefined {
+  return metricLevel(value, DEFAULT_PREFS.temp, "twoSided");
+}
+
+export function gasOhmLevel(value?: number): MetricLevel | undefined {
+  return metricLevel(value, DEFAULT_PREFS.gasOhm, "higherBetter");
+}
+
+export function iaqLevel(value?: number): MetricLevel | undefined {
+  return metricLevel(value, DEFAULT_PREFS.iaq, "lowerBetter");
+}
+
+export function co2Level(value?: number): MetricLevel | undefined {
+  return metricLevel(value, DEFAULT_PREFS.co2, "lowerBetter");
+}
+
+export function batteryLevel(value?: number): MetricLevel | undefined {
+  if (value === undefined) return undefined;
+  if (value > BATTERY_PLUGGED_IN) return "ok";
+  return metricLevel(value, BATTERY_BAND, "higherBetter");
+}
+
+export function voltageLevel(value?: number): MetricLevel | undefined {
+  return metricLevel(value, VOLTAGE_BAND, "twoSided");
+}
+
 export function estimatedCo2Ppm(iaq: number): number {
   return 400 + iaq * 4;
 }

@@ -245,6 +245,9 @@
     "co2": "CO2 estimé",
     "dewPoint": "Point de rosée",
     "feelsLike": "Température ressentie",
-    "iaqHeating": "Chauffe gaz…"
+    "iaqHeating": "Chauffe gaz…",
+    "statusOk": "Dans la moyenne",
+    "statusWarn": "Un peu décalé",
+    "statusAlert": "Complètement décalé"
   }
 }
