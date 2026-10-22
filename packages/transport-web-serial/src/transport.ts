@@ -317,6 +317,13 @@ export class TransportWebSerial implements Transport {
             try {
               rawReader.releaseLock();
             } catch {}
+            // A lost device leaves the COM handle open. The next Connect
+            // then fails with "could not be released" / access denied.
+            if (!this.closingByUser) {
+              try {
+                await this.connection.close();
+              } catch {}
+            }
           }
         })();
 

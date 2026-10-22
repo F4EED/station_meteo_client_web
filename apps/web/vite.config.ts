@@ -9,7 +9,7 @@ import { createHtmlPlugin } from "vite-plugin-html";
 import { VitePWA } from "vite-plugin-pwa";
 
 let hash = "";
-let version = "v0.1.2";
+let version = "v0.1.3";
 try {
   hash = execSync("git rev-parse --short HEAD", { encoding: "utf8" }).trim();
 } catch (error) {
