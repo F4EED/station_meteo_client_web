@@ -163,7 +163,7 @@ export function useConnections() {
         });
       }
     }
-    closeTransport(cachedTransports.get(id));
+    await closeTransport(cachedTransports.get(id));
     cachedTransports.delete(id);
     log.debug("teardown: done", { id });
   }, []);

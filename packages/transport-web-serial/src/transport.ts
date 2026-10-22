@@ -38,7 +38,7 @@ const POST_CLOSE_DELAY_MS = 400;
 
 const SERIAL_OPEN_OPTIONS = {
   baudRate: 115200,
-  bufferSize: 16 * 1024,
+  bufferSize: 1024,
   flowControl: "none" as const,
 };
 
@@ -65,6 +65,8 @@ export class TransportWebSerial implements Transport {
   private pipePromise: Promise<void> | null = null;
   private abortController: AbortController;
   private portReadable: ReadableStream<Uint8Array>;
+  private incomingReader?: ReadableStreamDefaultReader<DeviceOutput>;
+  private rawReader?: ReadableStreamDefaultReader<Uint8Array>;
 
   private lastStatus: DeviceStatusEnum = DeviceStatusEnum.DeviceDisconnected;
   private closingByUser = false;
@@ -170,6 +172,23 @@ export class TransportWebSerial implements Transport {
           ...SERIAL_OPEN_OPTIONS,
           baudRate,
         });
+        // nRF52840 TinyUSB (Seeed L1) ignores the phone API until the host
+        // asserts DTR. pyserial does this by default; Web Serial does not
+        // always, so the node stays silent and config never completes.
+        try {
+          await port.setSignals({
+            dataTerminalReady: true,
+            requestToSend: true,
+          });
+          log.debug("preparePort: DTR/RTS asserted");
+        } catch (cause) {
+          const sigErr = cause as Error;
+          log.warn("preparePort: setSignals threw", {
+            name: sigErr?.name,
+            message: sigErr?.message,
+          });
+        }
+        await new Promise((r) => setTimeout(r, 250));
         log.debug("preparePort: open() ok", { attempt });
         return Result.ok(true);
       } catch (err) {
@@ -241,11 +260,12 @@ export class TransportWebSerial implements Transport {
           return;
         }
         const e = err as Error;
+        console.warn("USB écriture interrompue", e?.name, e?.message);
         log.error("toDevice pipe rejected", {
           name: e?.name,
           message: e?.message,
         });
-        this.connection.close().catch(() => {});
+        void this.releasePort();
         this.emitStatus(DeviceStatusEnum.DeviceDisconnected, "write-error");
       });
 
@@ -258,8 +278,47 @@ export class TransportWebSerial implements Transport {
 
         this.emitStatus(DeviceStatusEnum.DeviceConnecting);
 
-        const transformed = this.portReadable.pipeThrough(fromDeviceStream());
-        const reader = transformed.getReader();
+        // Web Serial exposes a byte stream. pipeThrough() does not pull it on
+        // Chrome/Windows, so the node answers and the page never sees a byte,
+        // then port.close() fails with "locked stream". Read the port directly.
+        const decoder = fromDeviceStream();
+        const rawReader = this.portReadable.getReader();
+        this.rawReader = rawReader;
+        const decodedWriter = decoder.writable.getWriter();
+        const reader = decoder.readable.getReader();
+        this.incomingReader = reader;
+        void (async () => {
+          let loggedRx = false;
+          try {
+            while (true) {
+              const { value, done } = await rawReader.read();
+              if (done) {
+                await decodedWriter.close();
+                break;
+              }
+              if (value?.byteLength) {
+                if (!loggedRx) {
+                  loggedRx = true;
+                  const head = [...value.subarray(0, 12)]
+                    .map((b) => b.toString(16).padStart(2, "0"))
+                    .join(" ");
+                  console.warn("USB octets reçus", value.byteLength, head);
+                }
+                await decodedWriter.write(value);
+              }
+            }
+          } catch (error) {
+            const e = error as Error;
+            console.warn("USB lecture interrompue", e?.name, e?.message);
+            try {
+              await decodedWriter.abort(error);
+            } catch {}
+          } finally {
+            try {
+              rawReader.releaseLock();
+            } catch {}
+          }
+        })();
 
         const onOsDisconnect = (ev: Event) => {
           const { port } = ev as unknown as { port?: SerialPort };
@@ -298,7 +357,7 @@ export class TransportWebSerial implements Transport {
           }
           ctrl.error(error instanceof Error ? error : new Error(String(error)));
           try {
-            await transformed.cancel();
+            await this.rawReader?.cancel();
           } catch {}
         } finally {
           reader.releaseLock();
@@ -324,10 +383,31 @@ export class TransportWebSerial implements Transport {
       return;
     }
     this.lastStatus = next;
-    this.fromDeviceController?.enqueue({
-      type: "status",
-      data: { status: next, reason },
-    });
+    try {
+      this.fromDeviceController?.enqueue({
+        type: "status",
+        data: { status: next, reason },
+      });
+    } catch {
+      // The read loop may already have closed the stream.
+    }
+  }
+
+  /** Drop the reader lock, then close. port.close() fails while the lock is held. */
+  private async releasePort(): Promise<void> {
+    const raw = this.rawReader;
+    this.rawReader = undefined;
+    if (raw) {
+      try {
+        await raw.cancel();
+      } catch {}
+      try {
+        raw.releaseLock();
+      } catch {}
+    }
+    try {
+      await this.connection.close();
+    } catch {}
   }
 
   /**
@@ -346,7 +426,39 @@ export class TransportWebSerial implements Transport {
         log.debug("disconnect: pipePromise settled");
       }
 
-      // Cancel any remaining streams
+      // Cancel the reader first. port.close() rejects with
+      // "Cannot cancel a locked stream" while pipeThrough still holds
+      // port.readable, and the port then stays open for the next Connect.
+      const raw = this.rawReader;
+      this.rawReader = undefined;
+      if (raw) {
+        try {
+          await raw.cancel();
+          log.debug("disconnect: cancelled raw reader");
+        } catch (e) {
+          const err = e as Error;
+          log.warn("disconnect: rawReader.cancel() threw", {
+            name: err?.name,
+            message: err?.message,
+          });
+        }
+      }
+
+      const reader = this.incomingReader;
+      this.incomingReader = undefined;
+      if (reader) {
+        try {
+          await reader.cancel();
+          log.debug("disconnect: cancelled incoming reader");
+        } catch (e) {
+          const err = e as Error;
+          log.warn("disconnect: reader.cancel() threw", {
+            name: err?.name,
+            message: err?.message,
+          });
+        }
+      }
+
       if (this._fromDevice?.locked) {
         try {
           await this._fromDevice.cancel();

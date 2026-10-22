@@ -47,6 +47,7 @@ export const QUANTITY_KEYS: QuantityKey[] = [
   "co2",
 ];
 
+/** Same numbers as StationMeteoPrefsStore::defaults() in the firmware. */
 export const DEFAULT_PREFS: MeasurementRangePrefs = {
   temp: {
     mean: 15,
@@ -54,15 +55,15 @@ export const DEFAULT_PREFS: MeasurementRangePrefs = {
     high: 40,
     veryLow: -20,
     warnLow: 0,
-    warnHigh: 30,
+    warnHigh: 35,
     veryHigh: 45,
   },
   humidity: {
-    mean: 50,
+    mean: 55,
     low: 20,
     high: 90,
     veryLow: 10,
-    warnLow: 20,
+    warnLow: 30,
     warnHigh: 80,
     veryHigh: 95,
   },
@@ -71,16 +72,16 @@ export const DEFAULT_PREFS: MeasurementRangePrefs = {
     low: 980,
     high: 1040,
     veryLow: 960,
-    warnLow: 980,
+    warnLow: 990,
     warnHigh: 1030,
     veryHigh: 1050,
   },
   gasOhm: {
-    mean: 100_000,
+    mean: 50_000,
     low: 5_000,
     high: 1e7,
     veryLow: 1_000,
-    warnLow: 5_000,
+    warnLow: 10_000,
     warnHigh: 5e6,
     veryHigh: 2e7,
   },
@@ -94,12 +95,12 @@ export const DEFAULT_PREFS: MeasurementRangePrefs = {
     veryHigh: 200,
   },
   co2: {
-    mean: 450,
+    mean: 600,
     low: 400,
-    high: 1000,
+    high: 1500,
     veryLow: 350,
-    warnLow: 400,
-    warnHigh: 1200,
+    warnLow: 500,
+    warnHigh: 1000,
     veryHigh: 2000,
   },
 };
@@ -166,36 +167,57 @@ export function metricLevel(
   }
 }
 
-export function temperatureLevel(value?: number): MetricLevel | undefined {
-  return metricLevel(value, DEFAULT_PREFS.temp, "twoSided");
+export function temperatureLevel(
+  value?: number,
+  prefs: MeasurementRangePrefs = DEFAULT_PREFS,
+): MetricLevel | undefined {
+  return metricLevel(value, prefs.temp, "twoSided");
 }
 
-export function humidityLevel(value?: number): MetricLevel | undefined {
-  return metricLevel(value, DEFAULT_PREFS.humidity, "twoSided");
+export function humidityLevel(
+  value?: number,
+  prefs: MeasurementRangePrefs = DEFAULT_PREFS,
+): MetricLevel | undefined {
+  return metricLevel(value, prefs.humidity, "twoSided");
 }
 
-export function pressureLevel(value?: number): MetricLevel | undefined {
-  return metricLevel(value, DEFAULT_PREFS.pressure, "twoSided");
+export function pressureLevel(
+  value?: number,
+  prefs: MeasurementRangePrefs = DEFAULT_PREFS,
+): MetricLevel | undefined {
+  return metricLevel(value, prefs.pressure, "twoSided");
 }
 
 export function dewPointLevel(value?: number): MetricLevel | undefined {
   return metricLevel(value, DEW_POINT_BAND, "twoSided");
 }
 
-export function feelsLikeLevel(value?: number): MetricLevel | undefined {
-  return metricLevel(value, DEFAULT_PREFS.temp, "twoSided");
+export function feelsLikeLevel(
+  value?: number,
+  prefs: MeasurementRangePrefs = DEFAULT_PREFS,
+): MetricLevel | undefined {
+  return metricLevel(value, prefs.temp, "twoSided");
 }
 
-export function gasOhmLevel(value?: number): MetricLevel | undefined {
-  return metricLevel(value, DEFAULT_PREFS.gasOhm, "higherBetter");
+export function gasOhmLevel(
+  value?: number,
+  prefs: MeasurementRangePrefs = DEFAULT_PREFS,
+): MetricLevel | undefined {
+  return metricLevel(value, prefs.gasOhm, "twoSided");
 }
 
-export function iaqLevel(value?: number): MetricLevel | undefined {
-  return metricLevel(value, DEFAULT_PREFS.iaq, "lowerBetter");
+export function iaqLevel(
+  value?: number,
+  prefs: MeasurementRangePrefs = DEFAULT_PREFS,
+): MetricLevel | undefined {
+  return metricLevel(value, prefs.iaq, "lowerBetter");
 }
 
-export function co2Level(value?: number): MetricLevel | undefined {
-  return metricLevel(value, DEFAULT_PREFS.co2, "lowerBetter");
+export function co2Level(
+  value?: number,
+  prefs: MeasurementRangePrefs = DEFAULT_PREFS,
+): MetricLevel | undefined {
+  return metricLevel(value, prefs.co2, "lowerBetter");
 }
 
 export function batteryLevel(value?: number): MetricLevel | undefined {

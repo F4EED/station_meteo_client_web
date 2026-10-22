@@ -266,9 +266,9 @@ export async function probeConnection(
 /**
  * Best-effort cleanup for a held-onto BT device or serial port. Safe on either.
  */
-export function closeTransport(
+export async function closeTransport(
   handle: BluetoothDevice | SerialPort | undefined,
-): void {
+): Promise<void> {
   if (!handle) return;
   const bt = handle as BluetoothDevice;
   if (bt.gatt?.connected) {
@@ -277,9 +277,9 @@ export function closeTransport(
     } catch {}
   }
   const port = handle as SerialPort & { close?: () => Promise<void> };
-  if (port.close) {
+  if (port.close && (port.readable || port.writable)) {
     try {
-      port.close();
+      await port.close();
     } catch {}
   }
 }

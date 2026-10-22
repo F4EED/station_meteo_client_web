@@ -39,6 +39,7 @@ import {
   temperatureLevel,
   voltageLevel,
 } from "@core/stationMeteo/measurementRange.ts";
+import { useStationMeteoPrefs } from "@core/stationMeteo/useStationMeteoPrefs.ts";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -68,6 +69,7 @@ export default function MeteoPage() {
   const { t } = useTranslation("ui");
   const myNode = useMyNodeAsProto();
   const client = useActiveClient();
+  const { prefs } = useStationMeteoPrefs();
   const nodeNum = myNode?.num;
 
   const historySig = useMemo(
@@ -128,14 +130,14 @@ export default function MeteoPage() {
       label: t("meteo.temperature"),
       value: fmt(env?.temperature, 1, " °C"),
       icon: ThermometerIcon,
-      level: temperatureLevel(env?.temperature),
+      level: temperatureLevel(env?.temperature, prefs),
     },
     {
       key: "humidity",
       label: t("meteo.humidity"),
       value: fmt(env?.relativeHumidity, 0, " %"),
       icon: DropletsIcon,
-      level: humidityLevel(env?.relativeHumidity),
+      level: humidityLevel(env?.relativeHumidity, prefs),
     },
     {
       key: "dewPoint",
@@ -149,35 +151,35 @@ export default function MeteoPage() {
       label: t("meteo.feelsLike"),
       value: fmt(feelsLike, 1, " °C"),
       icon: ThermometerSunIcon,
-      level: feelsLikeLevel(feelsLike),
+      level: feelsLikeLevel(feelsLike, prefs),
     },
     {
       key: "pressure",
       label: t("meteo.pressure"),
       value: fmt(env?.barometricPressure, 1, " hPa"),
       icon: GaugeIcon,
-      level: pressureLevel(env?.barometricPressure),
+      level: pressureLevel(env?.barometricPressure, prefs),
     },
     {
       key: "iaq",
       label: t("meteo.iaq"),
       value: iaqOrPending,
       icon: LeafIcon,
-      level: iaqLevel(iaq),
+      level: iaqLevel(iaq, prefs),
     },
     {
       key: "gas",
       label: t("meteo.gas"),
       value: fmt(gasOhm, 0, " Ω"),
       icon: WindIcon,
-      level: gasOhmLevel(gasOhm),
+      level: gasOhmLevel(gasOhm, prefs),
     },
     {
       key: "co2",
       label: t("meteo.co2"),
       value: co2OrPending,
       icon: CloudIcon,
-      level: co2Level(co2Ppm),
+      level: co2Level(co2Ppm, prefs),
     },
   ];
 
